@@ -8,12 +8,15 @@
     "start": "node server/server.js",
     "test-watch": "nodemon --exec \"npm test\""
   },
-  "engines" : {"node" : "6.10.0"},
+  "engines": {
+    "node": "6.10.0"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.17.1",
     "express": "^4.15.2",
+    "lodash": "^4.17.4",
     "mongodb": "^2.2.5",
     "mongoose": "^4.5.9"
   },

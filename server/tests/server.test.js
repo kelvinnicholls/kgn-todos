@@ -13,15 +13,19 @@ const {
 
 const todos = [{
   text: "test 1",
+  completed: true,
   _id: new ObjectID()
 }, {
   text: "test 2",
+  completed: false,
   _id: new ObjectID()
 }, {
   text: "test 3",
+  completed: true,
   _id: new ObjectID()
 }, {
   text: "test 4",
+  completed: false,
   _id: new ObjectID()
 }];
 
@@ -178,6 +182,92 @@ describe('DELETE /todos/:id', () => {
     let id = 'x';
     request(app)
       .delete('/todos/' + id)
+      .expect(404)
+      .expect((res) => {
+        expect(res.body.error).toBe("ID is invalid");
+      })
+      .end(done);
+  });
+});
+
+
+describe('UPDATE /todos/:id', () => {
+
+  let todo = todos[0];
+  let oldText = todos[0].text;
+  let newText = todos[0].text + ' UPDATED';
+  todo.text = newText;
+  it('should update todo for id', (done) => {
+    let id = todos[0]._id.toHexString();
+    request(app)
+      .patch('/todos/' + id)
+      .send(todo)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo._id).toBe(id);
+        expect(res.body.todo.text).toBe(newText);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        Todo.findById(id).then((todo) => {
+          expect(todo.text).toBe(newText);
+          done();
+        }).catch((e) => done(e));
+
+      });
+  });
+
+  it('should set completedAt if completed', (done) => {
+    let id = todos[0]._id.toHexString();
+    todo.completed = true;
+    request(app)
+      .patch('/todos/' + id)
+      .send(todo)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo.text).toBe(newText);
+        expect(res.body.todo.completedAt).toBeA('number');
+        expect(res.body.todo.completed).toBe(true);
+      })
+      .end(done);
+  });
+
+    it('should not set completedAt if not completed', (done) => {
+    let id = todos[1]._id.toHexString();
+    todo.completed = false;
+    request(app)
+      .patch('/todos/' + id)
+      .send(todo)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo.text).toBe(newText);
+        expect(res.body.todo.completed).toBe(false);
+        expect(res.body.todo.completedAt).toBe(null);
+      })
+      .end(done);
+  });
+
+
+  it('should return 404 if todo not found', (done) => {
+    let id = new ObjectID().toHexString();
+    request(app)
+      .patch('/todos/' + id)
+      .send(todo)
+      .expect(404)
+      .expect((res) => {
+        expect(res.body.error).toBe("todo not found for id");
+      })
+      .end(done);
+  });
+
+  it('should return 404 of non ObjectID\'s', (done) => {
+    let id = 'x';
+    request(app)
+      .patch('/todos/' + id)
+      .send(todo)
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("ID is invalid");

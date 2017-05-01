@@ -12,17 +12,17 @@ const {
 } = require('./../models/todo');
 
 const todos = [{
-  text: "test 1"
-  ,_id : new ObjectID()
+  text: "test 1",
+  _id: new ObjectID()
 }, {
-  text: "test 2"
-  ,_id : new ObjectID()
+  text: "test 2",
+  _id: new ObjectID()
 }, {
-  text: "test 3"
-  ,_id : new ObjectID()
+  text: "test 3",
+  _id: new ObjectID()
 }, {
-  text: "test 4"
-  ,_id : new ObjectID()
+  text: "test 4",
+  _id: new ObjectID()
 }];
 
 beforeEach((done) => {
@@ -48,7 +48,7 @@ describe('GET /todos/:id', () => {
     let id = todos[0]._id.toHexString();
     let text = todos[0].text;
     request(app)
-      .get('/todos/'+id)
+      .get('/todos/' + id)
       .expect(200)
       .expect((res) => {
         expect(res.body.todo._id).toBe(id);
@@ -60,7 +60,7 @@ describe('GET /todos/:id', () => {
   it('should return 404 if todo not found', (done) => {
     let id = new ObjectID().toHexString();
     request(app)
-      .get('/todos/'+id)
+      .get('/todos/' + id)
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("todo not found for id");
@@ -68,10 +68,10 @@ describe('GET /todos/:id', () => {
       .end(done);
   });
 
-    it('should return 404 of non ObjectID\'s', (done) => {
+  it('should return 404 of non ObjectID\'s', (done) => {
     let id = 'x';
     request(app)
-      .get('/todos/'+id)
+      .get('/todos/' + id)
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("ID is invalid");
@@ -126,3 +126,62 @@ describe('POST /todos', () => {
   });
 });
 
+
+describe('DELETE /todos', () => {
+  it('should delete all todos', (done) => {
+    request(app)
+      .delete('/todos')
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todos.n).toBe(4);
+      })
+      .end(done);
+  });
+});
+
+describe('DELETE /todos/:id', () => {
+  it('should delete todo for id', (done) => {
+    let id = todos[0]._id.toHexString();
+    let text = todos[0].text;
+    request(app)
+      .delete('/todos/' + id)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo._id).toBe(id);
+        expect(res.body.todo.text).toBe(text);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        Todo.findById(id).then((todo) => {
+          expect(todo).toNotExist();
+          done();
+        }).catch((e) => done(e));
+
+      });
+  });
+
+  it('should return 404 if todo not found', (done) => {
+    let id = new ObjectID().toHexString();
+    request(app)
+      .delete('/todos/' + id)
+      .expect(404)
+      .expect((res) => {
+        expect(res.body.error).toBe("todo not found for id");
+      })
+      .end(done);
+  });
+
+  it('should return 404 of non ObjectID\'s', (done) => {
+    let id = 'x';
+    request(app)
+      .delete('/todos/' + id)
+      .expect(404)
+      .expect((res) => {
+        expect(res.body.error).toBe("ID is invalid");
+      })
+      .end(done);
+  });
+});

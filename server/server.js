@@ -6,18 +6,20 @@ const {
 
 const _ = require('lodash');
 
-var {
-  mongoose
-} = require('./db/mongoose');
-var {
+let {
   Todo
 } = require('./models/todo');
-var {
+let {
   User
 } = require('./models/user');
 
-var app = express();
+let app = express();
 
+let config = require('./config/config.js')
+
+let {
+  mongoose
+} = require('./db/mongoose');
 
 app.use(bodyParser.json());
 
@@ -130,7 +132,7 @@ app.patch('/todos/:id', (req, res) => {
     id
   } = req.params;
 
-  let body = _.pick(req.body,['text','completed']);
+  let body = _.pick(req.body, ['text', 'completed']);
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send({
@@ -146,7 +148,11 @@ app.patch('/todos/:id', (req, res) => {
   }
 
 
-  Todo.findByIdAndUpdate(id, {$set : body}, {new:true}).then((todo) => {
+  Todo.findByIdAndUpdate(id, {
+    $set: body
+  }, {
+    new: true
+  }).then((todo) => {
 
     if (todo) {
       res.send({

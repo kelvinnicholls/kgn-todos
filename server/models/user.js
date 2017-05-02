@@ -40,9 +40,9 @@ let UserSchema = new mongoose.Schema({
 //override this method
 UserSchema.methods.toJSON = function () {
   let user = this;
-  console.log("user",user);
+  console.log("user", user);
   let userObject = user.toObject();
-  console.log("userObject",userObject);
+  console.log("userObject", userObject);
   return _.pick(userObject, ['_id', 'email']);
 };
 
@@ -61,6 +61,23 @@ UserSchema.methods.generateAuthToken = function () {
     return token;
   })
 };
+
+UserSchema.statics.findByToken = function (token) {
+  let User = this;
+  let decoded;
+  try {
+    decoded = jwt.verify(token, seed);
+  } catch (e) {
+    return  Promise.reject();
+
+  }
+  return User.findOne({
+    '_id': decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth'
+  })
+
+}
 var User = mongoose.model('User', UserSchema);
 
 module.exports = {

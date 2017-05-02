@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
-
+const bcrypt = require('bcryptjs');
 
 const seed = "odower[owo[o[rw o[wrororew";
 
@@ -68,7 +68,7 @@ UserSchema.statics.findByToken = function (token) {
   try {
     decoded = jwt.verify(token, seed);
   } catch (e) {
-    return  Promise.reject();
+    return Promise.reject();
 
   }
   return User.findOne({
@@ -78,6 +78,27 @@ UserSchema.statics.findByToken = function (token) {
   })
 
 }
+
+
+// mongoose middleware fired prior to a save
+UserSchema.pre('save', function (next) {
+  let user = this;
+  if (user.isModified('password')) {
+    bcrypt.genSalt(10, (err, salt) => {
+      if (!err) {
+        bcrypt.hash(this.password, salt, (err, hash) => {
+          if (!err) {
+            this.password = hash;
+            next();
+          }
+        });
+      }
+    });
+  } else {
+    next();
+  }
+});
+
 var User = mongoose.model('User', UserSchema);
 
 module.exports = {

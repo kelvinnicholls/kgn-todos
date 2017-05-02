@@ -1,5 +1,8 @@
 const expect = require('expect');
 const request = require('supertest');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
 const {
   ObjectID
 } = require('mongodb');
@@ -11,29 +14,20 @@ const {
   Todo
 } = require('./../models/todo');
 
-const todos = [{
-  text: "test 1",
-  completed: true,
-  _id: new ObjectID()
-}, {
-  text: "test 2",
-  completed: false,
-  _id: new ObjectID()
-}, {
-  text: "test 3",
-  completed: true,
-  _id: new ObjectID()
-}, {
-  text: "test 4",
-  completed: false,
-  _id: new ObjectID()
-}];
+const {
+  User,
+  seed
+} = require('./../models/user');
 
-beforeEach((done) => {
-  Todo.remove({}).then(() => {
-    return Todo.insertMany(todos);
-  }).then(() => done());
-});
+const {
+  todos,
+  populateTodos,
+  populateUsers,
+  users
+} = require('./seed');
+
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('GET /todos', () => {
   it('should get all todos', (done) => {
@@ -235,7 +229,7 @@ describe('UPDATE /todos/:id', () => {
       .end(done);
   });
 
-    it('should not set completedAt if not completed', (done) => {
+  it('should not set completedAt if not completed', (done) => {
     let id = todos[1]._id.toHexString();
     todo.completed = false;
     request(app)
@@ -271,6 +265,120 @@ describe('UPDATE /todos/:id', () => {
       .expect(404)
       .expect((res) => {
         expect(res.body.error).toBe("ID is invalid");
+      })
+      .end(done);
+  });
+});
+
+
+describe('GET /users/me', () => {
+
+  it('should return user if authenticated', (done) => {
+    request(app)
+      .get('/users/me')
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body._id).toBe(users[0]._id.toString());
+        expect(res.body.email).toBe(users[0].email);
+      })
+      .end(done);
+  });
+
+  it('should return 401 if not authenticated', (done) => {
+    request(app)
+      .get('/users/me')
+      .set({
+        'x-auth': 'xx'
+      })
+      .expect(401)
+      .expect((res) => {
+        expect(res.body).toEqual({});
+      })
+      .end(done);
+  });
+
+});
+
+
+describe('POST /users', () => {
+  it('should create a user', (done) => {
+    let email = 'email3@email.com';
+    let password = 'email3.password';
+    let user = {
+      email,
+      password
+    };
+    request(app)
+      .post('/users/')
+      .send(user)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.email).toBe(email);
+        let access = 'auth';
+        console.log("res.body", res.body);
+        console.log("res.body.user", res.body.user);
+        let token = jwt.sign({
+          _id: res.body._id,
+          access
+        }, seed).toString();
+        //expect(res.body.tokens[0].token).toBe(token);
+        expect(res.body._id).toExist();
+        expect(res.headers['x-auth']).toExist();
+        // let hashedPassword = '';
+        // bcrypt.genSalt(10, (err, salt) => {
+        //   if (!err) {
+        //     bcrypt.hash(password, salt, (err, hash) => {
+        //       if (!err) {
+        //         hashedPassword = hash;
+        //       }
+        //     });
+        //   }
+        // });
+
+        //expect(res.body.password).toBe(hashedPassword);
+      })
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        User.findOne({email}).then((user) => {
+          expect(user).toExist();
+          expect(user.email).toBe(email);
+          expect(user.password).toNotBe(password);
+          done();
+        })
+      });
+  });
+  it('should return validation errors if request invalid', (done) => {
+    let email = 'email4.email.com';
+    let password = 'email4.password';
+    request(app)
+      .post('/users/')
+      .send({
+        email,
+        password
+      })
+      .expect(400)
+      .expect((res) => {
+        expect(res.body).toEqual({});
+      })
+      .end(done);
+  });
+  it('should not create a user if email in use', (done) => {
+    let email = users[0].email;
+    let password = users[0].password;
+    request(app)
+      .post('/users/')
+      .send({
+        email,
+        password
+      })
+      .expect(400)
+      .expect((res) => {
+        expect(res.body).toEqual({});
       })
       .end(done);
   });

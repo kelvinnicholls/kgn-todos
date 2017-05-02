@@ -43,6 +43,7 @@ UserSchema.methods.toJSON = function () {
   console.log("user", user);
   let userObject = user.toObject();
   console.log("userObject", userObject);
+  //return _.pick(userObject, ['_id', 'email','tokens']);
   return _.pick(userObject, ['_id', 'email']);
 };
 
@@ -63,6 +64,7 @@ UserSchema.methods.generateAuthToken = function () {
 };
 
 UserSchema.statics.findByToken = function (token) {
+  console.log('findByToken', token);
   let User = this;
   let decoded;
   try {
@@ -102,5 +104,6 @@ UserSchema.pre('save', function (next) {
 var User = mongoose.model('User', UserSchema);
 
 module.exports = {
-  User
+  User,
+  seed
 }

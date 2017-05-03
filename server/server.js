@@ -20,7 +20,7 @@ let {
 
 let app = express();
 
-let config = require('./config/config.js')
+let config = require('./config/config.js');
 
 let {
   mongoose

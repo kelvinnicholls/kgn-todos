@@ -3,8 +3,10 @@ const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
+let config = require('../config/config.js')
+const seed = process.env.JWT_SECRET;
 
-const seed = "odower[owo[o[rw o[wrororew";
+console.log("seed",seed);
 
 let UserSchema = new mongoose.Schema({
   email: {

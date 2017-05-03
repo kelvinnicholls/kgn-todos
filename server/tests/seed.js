@@ -59,26 +59,37 @@ const users = [{
     {
         _id: user2Id,
         email: user2email,
-        password: user2password
+        password: user2password,
+        tokens: [{
+            access: 'auth',
+            token: jwt.sign({
+                _id: user2Id.toHexString(),
+                access: 'auth'
+            }, seed).toString()
+        }]
     }
 ];
 
 const todos = [{
     text: "test 1",
     completed: true,
-    _id: new ObjectID()
+    _id: new ObjectID(),
+    _creator: user1Id
 }, {
     text: "test 2",
     completed: false,
-    _id: new ObjectID()
+    _id: new ObjectID(),
+    _creator: user2Id
 }, {
     text: "test 3",
     completed: true,
-    _id: new ObjectID()
+    _id: new ObjectID(),
+    _creator: user1Id
 }, {
     text: "test 4",
     completed: false,
-    _id: new ObjectID()
+    _id: new ObjectID(),
+    _creator: user2Id
 }];
 
 const populateTodos = (done) => {

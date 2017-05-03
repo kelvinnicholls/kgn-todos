@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "export NODE_ENV=test || set \"NODE_ENV=test\" && mocha server/**/*.test.js --timeout=5000",
-    "start": "node server/server.js",  
+    "start": "nodemon server/server.js",  
     "test-watch": "nodemon --exec \"npm test\""
   },
   "engines": {

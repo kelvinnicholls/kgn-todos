@@ -454,3 +454,36 @@ describe('POST /users/login', () => {
       .end(done);
   });
 });
+
+
+describe('DELETE /users/me/token', () => {
+
+  it('should remove auth token on logout', (done) => {
+    let email = users[0].email;
+    let password = users[0].password;
+    request(app)
+      .delete('/users/me/token')
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
+      .send({
+        email,
+        password
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body).toEqual({});
+        expect(res.headers['x-auth']).toNotExist();
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findById(users[0]._id).then((user) => {
+          expect(user.tokens.length).toBe(0);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+});

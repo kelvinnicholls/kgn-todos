@@ -63,6 +63,18 @@ UserSchema.methods.generateAuthToken = function () {
   })
 };
 
+UserSchema.methods.removeToken = function (token) {
+  let user = this;
+  return user.update({
+    // if token in tokens array matches passed token the element is removed from the array
+    $pull: {
+      tokens: {
+        token: token
+      }
+    }
+  });
+};
+
 UserSchema.statics.findByCredentials = function (email, password) {
   let User = this;
 
